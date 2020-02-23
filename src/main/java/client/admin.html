@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <title>Document</title>
+
+    <link rel="stylesheet" href="css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<section class="container">
+    <h1 class="text-center">TOP movies in the world</h1>
+    <button class="btn btn-secondary btn-sm" id="buttonPrev">Prev</button>
+    <button class="btn btn-secondary btn-sm" id="buttonNext">Next</button>
+    <div class="row" id="movieCards">
+    </div>
+</section>
+
+<section class="container">
+    <select id="categoriesSelect" class="form-control"></select>
+</section>
+
+<script src="js/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/global.js"></script>
+<script src="js/main.js"></script>
+
+<script>
+    $(document).ready(function () {
+        let pageNumber = 0;
+        let size = 10;
+
+        getAllMovies(pageNumber, size);
+
+        $('#buttonPrev').on('click', function () {
+            if (pageNumber > 0) {
+                pageNumber--;
+            }
+            getAllMovies(pageNumber, size);
+        });
+
+        $('#buttonNext').on('click', function () {
+            pageNumber++;
+            if (pageNumber <= 0) {
+                pageNumber = 0;
+            }
+            getAllMovies(pageNumber, size);
+        });
+
+
+        getCategories();
+
+        $('#categoriesSelect').on('change', function (e) {
+            console.log($('#categoriesSelect').val());
+        });
+    });
+
+    function getAllMovies(page, size) {
+        $("#movieCards").empty();
+        $.ajax({
+            url: SERVER_URL + "movies?page=" + page,
+            method: "GET",
+            contentType: "application/json",
+            complete: function (response) {
+                let moviesJson = response.responseJSON;
+
+                if (moviesJson.content.length < size) {
+                    $('#buttonNext').prop('disabled', true);
+                } else {
+                    $('#buttonNext').prop('disabled', false);
+                }
+
+                $.each(moviesJson.content, function (key, value) {
+                    $("#movieCards").append(
+                        `
+                <div class="col-md-4 mb-4">
+                    <div class="card mb-4">
+                        <img
+                        class="card-img-top img-fluid"
+                        src="http://placehold.it/500x280"
+                        alt="Card image cap"
+                        />
+                        <div class="card-body" style="height: 14rem">
+                        <h4 class="card-title">${value.title}</h4>
+                        <p class="card-text">
+                            ${value.description}
+                        </p>
+                        <p class="card-text">
+                            <small class="text-muted">Duration ${value.duration}</small>
+                        </p>
+                        </div>
+                    </div>
+                </div>
+                    `
+                    );
+                });
+            }
+        });
+    }
+
+    function getCategories() {
+        $.ajax({
+            url: SERVER_URL + "movies/category",
+            method: "GET",
+            contentType: "application/json",
+            complete: function (response) {
+                $.each(response.responseJSON, function (key, value) {
+                    $('#categoriesSelect').append(
+                        `
+                        <option value="${value.id}">${value.name}</option>
+                    `
+                    );
+                })
+            }
+        });
+    }
+</script>
+</body>
+</html>
